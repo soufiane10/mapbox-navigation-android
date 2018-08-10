@@ -2,6 +2,7 @@ package com.mapbox.services.android.navigation.ui.v5.map;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.location.Location;
@@ -66,13 +67,13 @@ public class NavigationMapboxMap {
   private SymbolLayer waynameLayer;
   private List<Marker> mapMarkers = new ArrayList<>();
 
-  public NavigationMapboxMap(MapView mapView, MapboxMap mapboxMap) {
+  public NavigationMapboxMap(MapView mapView, MapboxMap mapboxMap, Context context, int cameraState) {
     this.mapboxMap = mapboxMap;
     initializeLocationLayer(mapView, mapboxMap);
     initializeMapPaddingAdjustor(mapView, mapboxMap);
     initializeWayname(mapView, mapboxMap, mapPaddingAdjustor);
     initializeRoute(mapView, mapboxMap);
-    initializeCamera(mapboxMap);
+    initializeCamera(mapboxMap, context, cameraState);
   }
 
   public void addMarker(Context context, Point position) {
@@ -102,8 +103,8 @@ public class NavigationMapboxMap {
     mapRoute.removeRoute();
   }
 
-  public void updateCameraTrackingEnabled(boolean isEnabled) {
-    mapCamera.updateCameraTrackingLocation(isEnabled);
+  public void setNotTracking() {
+    mapCamera.setNotTracking();
   }
 
   public void startCamera(DirectionsRoute directionsRoute) {
@@ -119,9 +120,9 @@ public class NavigationMapboxMap {
     resetMapPadding();
   }
 
-  public void showRouteOverview(int[] padding) {
+  public void showRouteOverview() {
     mapPaddingAdjustor.removeAllPadding();
-    mapCamera.showRouteOverview(padding);
+    mapCamera.showRouteOverview();
   }
 
   public void updateWaynameView(String wayname) {
@@ -172,6 +173,19 @@ public class NavigationMapboxMap {
     mapboxMap.snapshot(navigationSnapshotReadyCallback);
   }
 
+  public int getCameraState() {
+    return mapCamera.getCameraState();
+  }
+
+  private int[] buildRouteOverviewPadding(Context context) {
+    Resources resources = context.getResources();
+    int leftRightPadding = (int) resources.getDimension(R.dimen.route_overview_left_right_padding);
+    int paddingBuffer = (int) resources.getDimension(R.dimen.route_overview_buffer_padding);
+    int instructionHeight = (int) (resources.getDimension(R.dimen.instruction_layout_height) + paddingBuffer);
+    int summaryHeight = (int) resources.getDimension(R.dimen.summary_bottomsheet_height);
+    return new int[] {leftRightPadding, instructionHeight, leftRightPadding, summaryHeight};
+  }
+
   private void initializeLocationLayer(MapView mapView, MapboxMap map) {
     Context context = mapView.getContext();
     int locationLayerStyleRes = ThemeSwitcher.retrieveNavigationViewStyle(context,
@@ -184,8 +198,9 @@ public class NavigationMapboxMap {
     mapPaddingAdjustor = new MapPaddingAdjustor(mapView, mapboxMap);
   }
 
-  private void initializeCamera(MapboxMap map) {
-    mapCamera = new NavigationCamera(map);
+  private void initializeCamera(MapboxMap map, Context context, int cameraState) {
+    int[] padding = buildRouteOverviewPadding(context);
+    mapCamera = new NavigationCamera(map, padding, cameraState);
   }
 
   private void initializeWayname(MapView mapView, MapboxMap mapboxMap, MapPaddingAdjustor paddingAdjustor) {
