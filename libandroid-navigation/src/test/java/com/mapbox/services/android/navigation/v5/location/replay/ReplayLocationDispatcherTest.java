@@ -49,33 +49,6 @@ public class ReplayLocationDispatcherTest {
   }
 
   @Test
-  public void checksLocationNotDispatchedWhenIsLastLocation() {
-    List<Location> anyLocations = new ArrayList<>(1);
-    Location aLocation = createALocation();
-    anyLocations.add(aLocation);
-    ReplayLocationDispatcher theReplayLocationDispatcher = new ReplayLocationDispatcher(anyLocations);
-    ReplayLocationListener aReplayLocationListener = mock(ReplayLocationListener.class);
-    theReplayLocationDispatcher.addReplayLocationListener(aReplayLocationListener);
-    theReplayLocationDispatcher.stop();
-
-    theReplayLocationDispatcher.run();
-
-    verify(aReplayLocationListener, never()).onLocationReplay(eq(aLocation));
-  }
-
-  @Test
-  public void checksNextDispatchNotScheduledWhenIsLastLocation() {
-    List<Location> anyLocations = mock(List.class);
-    Handler aHandler = mock(Handler.class);
-    ReplayLocationDispatcher theReplayLocationDispatcher = new ReplayLocationDispatcher(anyLocations, aHandler);
-
-    theReplayLocationDispatcher.stop();
-    theReplayLocationDispatcher.run();
-
-    verify(aHandler, never()).postDelayed(any(Runnable.class), anyLong());
-  }
-
-  @Test
   public void checksNextDispatchScheduledWhenLocationsIsNotEmpty() {
     List<Location> anyLocations = new ArrayList<>(2);
     Location firstLocation = createALocation();
@@ -102,7 +75,7 @@ public class ReplayLocationDispatcherTest {
 
     theReplayLocationDispatcher.run();
 
-    verify(aHandler, times(1)).removeCallbacks(eq(theReplayLocationDispatcher));
+    verify(aHandler, never()).postDelayed(any(Runnable.class), anyLong());
   }
 
   @Test
@@ -125,20 +98,6 @@ public class ReplayLocationDispatcherTest {
     theReplayLocationDispatcher.stop();
 
     verify(aHandler, times(1)).removeCallbacks(eq(theReplayLocationDispatcher));
-  }
-
-  @Test
-  public void checksLastLocationDispatchedWhenStop() {
-    List<Location> anyLocations = mock(List.class);
-    Handler aHandler = mock(Handler.class);
-    ReplayLocationDispatcher theReplayLocationDispatcher = new ReplayLocationDispatcher(anyLocations, aHandler);
-    ReplayLocationListener aReplayLocationListener = mock(ReplayLocationListener.class);
-    theReplayLocationDispatcher.addReplayLocationListener(aReplayLocationListener);
-
-    theReplayLocationDispatcher.stop();
-    theReplayLocationDispatcher.run();
-
-    verify(aReplayLocationListener, never()).onLocationReplay(any(Location.class));
   }
 
   @Test
